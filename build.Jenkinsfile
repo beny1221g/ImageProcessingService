@@ -4,7 +4,7 @@ pipeline {
         stage('Build docker image') {
             steps {
                     sh '''
-                        echo "hello world2"
+                        echo "hello world tt"
                     '''
 
             }
