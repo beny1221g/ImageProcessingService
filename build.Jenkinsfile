@@ -9,7 +9,7 @@ pipeline {
               docker login  -u beny14
               docker push beny14/repo1:polybot-${BUILD_NUMBER}
                 '''
-}
+
 
             }
         }
