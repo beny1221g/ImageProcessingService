@@ -7,9 +7,11 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Update system packages and install any dependencies
+# Update system packages and install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gcc \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the required Python packages with verbose output
