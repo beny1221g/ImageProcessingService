@@ -16,8 +16,8 @@ pipeline {
                             cd polybot
                             docker login -u %USERNAME% -p %USERPASS%
                             docker build -t %IMG_NAME% .
-                            docker tag %IMG_NAME% beny14/repo1:%IMG_NAME%
-                            docker push beny14/repo1:%IMG_NAME%
+                            docker tag %IMG_NAME% beny14/%IMG_NAME%
+                            docker push beny14/%IMG_NAME%
                         """
                     }
                 }
