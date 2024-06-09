@@ -12,11 +12,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     libssl-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the required Python packages with verbose output
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt --verbose
 
 # Copy the rest of the application code into the container
 COPY . .
