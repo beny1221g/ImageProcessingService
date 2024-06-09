@@ -5,7 +5,7 @@ pipeline {
             steps {
             withCredentials(
                  [usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]
-              ) {
+              )
                     script {
                         bat """
                             @echo off
@@ -17,4 +17,5 @@ pipeline {
             }
         }
     }
-}
+    }
+    }
