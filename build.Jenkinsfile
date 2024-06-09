@@ -23,8 +23,8 @@ pipeline {
                 }
             }
         }
-//         stage('Trigger Deploy'){
-//         steps job: 'ploybotdeploy',wait:false, parameters:[
-//         string(name:'beny14/repo1:%IMG_NAME%', value:"beny14/repo1:%IMG_NAME%")]}
+        stage('Trigger Deploy'){
+        steps job: 'polybotdeploy',wait:false, parameters:[
+        string(name:'beny14/%IMG_NAME%', value:"beny14/%IMG_NAME%")]}
     }
 }
