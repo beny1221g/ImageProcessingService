@@ -10,7 +10,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 # Check if TELEGRAM_TOKEN is not none
 if TELEGRAM_TOKEN is None:
-    print("Error: TELEGRAM_TOKEN is not set in the .env file.")
+    print("Error : TELEGRAM_TOKEN is not set in the .env file.")
     exit(1)
 
 # initialize telegram-bot
