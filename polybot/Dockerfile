@@ -7,6 +7,8 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
 # Update system packages and install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
