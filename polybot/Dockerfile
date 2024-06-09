@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install the required Python packages with verbose output
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt --verbose || { echo 'pip install failed'; exit 1; }
+# Install the required Python packages
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt --verbose
 
 # Copy the rest of the application code into the container
 COPY . .
