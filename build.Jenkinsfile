@@ -25,7 +25,7 @@ pipeline {
         }
         stage('Trigger Deploy') {
             steps {
-                build job: 'polybotdeploy', wait: false, parameters: [
+                build job: 'deploy_polybot', wait: false, parameters: [
                     string(name: 'beny14/$IMG_NAME', value: IMG_NAME)
                 ]
             }
