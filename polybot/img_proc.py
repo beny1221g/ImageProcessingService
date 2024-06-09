@@ -13,7 +13,7 @@ class Img:
             if image is not None:
                 return image
             else:
-                raise FileNotFoundError("Unable to load image.")
+                raise FileNotFoundError(" Unable to load image.")
         except Exception as e:
             print(f"Error loading image: {e}")
             return None
