@@ -3,9 +3,7 @@ pipeline {
     stages {
         stage('Build docker image') {
             steps {
-            withCredentials(
-                 [usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]
-              )
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
                         bat """
                             @echo off
@@ -14,8 +12,9 @@ pipeline {
                             docker build -t beny14/repo1:%BUILD_NUMBER% .
                             docker push beny14/repo1:%BUILD_NUMBER%
                         """
+                    }
+                }
             }
         }
     }
-    }
-    }
+}
