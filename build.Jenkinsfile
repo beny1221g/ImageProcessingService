@@ -1,20 +1,26 @@
 pipeline {
     agent any
+
+enviroment{
+     IMG_NAME = "polybot:${BUILD_NUMBER}"
+
     stages {
         stage('Build docker image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
-                    script {
+                     {
                         bat """
                             @echo off
                             cd polybot
-                            echo %USERPASS% | docker login -u %USERNAME% --password-stdin
-                            docker build -t beny14/repo1:%BUILD_NUMBER% .
-                            docker push beny14/repo1:%BUILD_NUMBER%
+                            docker login -u %USERNAME% -p $USERPASS% --password-stdin
+                            docker build -t %IMG_NAME% .
+                            docker tag %IMG_NAME% beny14/%IMG_NAME%
+                            docker push beny14/%IMG_NAME%
                         """
-                    }
+
                 }
             }
         }
     }
+}
 }
