@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Deploy') {
             steps {
-                sh '''
+                bat '''
                     echo "deploying to k8s cluster ..( or any other alternative)"
                 '''
             }
