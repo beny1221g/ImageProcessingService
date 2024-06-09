@@ -14,17 +14,21 @@ pipeline {
                         bat """
                             @echo off
                             cd polybot
-                            docker login -u %USERNAME% -p %USERPASS%
-                            docker build -t %IMG_NAME% .
-                            docker tag %IMG_NAME% beny14/%IMG_NAME%
-                            docker push beny14/%IMG_NAME%
+                            docker login -u $USERNAME -p $USERPASS
+                            docker build -t $IMG_NAME .
+                            docker tag $IMG_NAME beny14/$IMG_NAME
+                            docker push beny14/$IMG_NAME
                         """
                     }
                 }
             }
         }
-        stage('Trigger Deploy'){
-        steps job: 'polybotdeploy',wait:false, parameters:[
-        string(name:'beny14/%IMG_NAME%', value:"beny14/%IMG_NAME%")]}
+        stage('Trigger Deploy') {
+            steps {
+                build job: 'polybotdeploy', wait: false, parameters: [
+                    string(name: 'IMG_NAME', value: IMG_NAME)
+                ]
+            }
+        }
     }
 }

@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-     string(name: 'beny14/polybot', defaultValue: 'INAGE_URL', description: 'deploy polybot')
+     string(name: 'beny14/polybot:${BUILD_NUMBER}', defaultValue: 'INAGE_URL', description: 'deploy polybot')
     }
 
     stages {
