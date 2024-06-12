@@ -13,7 +13,7 @@ pipeline {
                         // Use correct Docker login syntax
                         sh """
                             cd polybot
-                            docker login -u ${USERNAME} -p ${USERPASS}
+                            echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                             docker build -t ${IMG_NAME} .
                             docker tag ${IMG_NAME} beny14/${IMG_NAME}
                             docker push beny14/${IMG_NAME}
