@@ -2,7 +2,7 @@
 FROM python:3.10.12-slim-bullseye
 
 # Set the working directory in the container
-WORKDIR /var/lib/jenkins/workspace/build_polybot
+WORKDIR /app
 
 # Copy the requirements file into the container
 COPY requirements.txt .
