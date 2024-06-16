@@ -15,7 +15,7 @@ pipeline {
              sh '''
              cd polybot
              pip install -r requirements.txt
-             python -m pylint *.py
+             python3 -m pylint *.py
                 '''
          }
       }
