@@ -13,7 +13,7 @@ RUN mkdir /snyk && cd /snyk \
 
 
 
-#FROM jenkins/jnlp-agent-python
+#FROM jenkins/jnlp-agent-python .
 FROM jenkins/agent
 COPY --from=docker /usr/local/bin/docker /usr/local/bin/
 COPY --from=installer /usr/local/aws-cli/ /usr/local/aws-cli/
