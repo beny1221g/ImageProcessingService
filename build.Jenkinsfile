@@ -2,7 +2,7 @@ pipeline {
 
     agent {
         docker {
-            image 'beny1221g/dockerfile_agent:latest'
+            image 'beny14/dockerfile_agent:latest'
             label 'my-docker-agent'
             args '-v /var/lib/jenkins/workspace:/workspace'
         }
