@@ -1,5 +1,11 @@
 pipeline {
-    agent any
+    agent {
+    docker {
+        image 'beny14/dockerfile_agent:latest'
+        args  '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+           }
+           }
+
 
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
