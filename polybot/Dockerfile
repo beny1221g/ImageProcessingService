@@ -19,3 +19,5 @@ COPY . .
 
 # Specify the command to run the application
 CMD ["python3", "polybot/bot.py"]
+
+EXPOSE 5000
