@@ -8,6 +8,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY . /usr/share/nginx/html
 
 # Expose the port that Nginx will run on
-EXPOSE 8001
+EXPOSE 8002
 
 # Start Nginx (default command of the Nginx image)
