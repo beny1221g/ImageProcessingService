@@ -16,13 +16,13 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install the required Python packages
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN sudo pip install --no-cache-dir --upgrade pip
+RUN sudo pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
 COPY . .
-
+RUN cd polybot
 # Specify the command to run the application
-CMD ["python3", "polybot/bot.py"]
+CMD ["python3", "bot.py"]
 
 EXPOSE 5000
