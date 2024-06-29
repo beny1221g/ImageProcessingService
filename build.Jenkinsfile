@@ -14,7 +14,7 @@ pipeline {
     agent {
         docker {
             image 'beny14/dockerfile_agent:latest'
-            args  '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+            args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
 
@@ -39,7 +39,9 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh 'docker run --rm $IMG_NAME pylint polybot'
+                    // Run pylint with PYTHONPATH set
+                    sh 'docker run --rm -e PYTHONPATH=/app $IMG_NAME pylint polybot'
+                    // Run pytest
                     sh 'docker run --rm $IMG_NAME pytest'
                 }
             }
