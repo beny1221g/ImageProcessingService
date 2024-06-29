@@ -26,10 +26,11 @@ pipeline {
                         sh """
                             cd polybot
                             echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
-                            docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
-                            docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
-                            docker push ${DOCKER_REPO}:${BUILD_NUMBER}
-                            docker push ${DOCKER_REPO}:latest
+
+                            docker build -t beny14/${IMG_NAME} .
+                            docker tag beny14/${IMG_NAME} beny14/${IMG_NAME}
+                            docker push beny14/${IMG_NAME}
+                            docker push beny14/${IMG_NAME}
                         """
                     }
                 }
