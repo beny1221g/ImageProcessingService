@@ -39,11 +39,14 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Run pylint with PYTHONPATH set
+                    // Run pylint in a virtual environment
                     sh '''
                     cd polybot
+                    python3 -m venv venv
+                    . venv/bin/activate
                     pip install -r requirements.txt
                     python3 -m pylint *.py
+                    deactivate
                     '''
                 }
             }
@@ -70,7 +73,7 @@ pipeline {
             // Clean up old Docker images but keep the new one
             script {
                 sh """
-                    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi || true
+                    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
                 """
             }
 
