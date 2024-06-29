@@ -1,4 +1,15 @@
 pipeline {
+    // Add pipeline options
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: '30'))
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    // Define environment variables
+    environment {
+        IMG_NAME = "polybot:${BUILD_NUMBER}"
+    }
 
     agent {
         docker {
@@ -7,12 +18,8 @@ pipeline {
         }
     }
 
-    environment {
-        IMG_NAME = "polybot:${BUILD_NUMBER}"
-    }
-
     stages {
-        stage('Build docker image') {
+        stage('Build') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
@@ -28,12 +35,41 @@ pipeline {
                 }
             }
         }
-        stage('Trigger Deploy') {
+
+        stage('Test') {
             steps {
-                build job: 'deploy_polybot', wait: false, parameters: [
-                    string(name: 'beny14/$IMG_NAME', value: IMG_NAME)
-                ]
+                script {
+                    sh 'docker run --rm $IMG_NAME pylint polybot'
+                    sh 'docker run --rm $IMG_NAME pytest'
+                }
             }
+        }
+    }
+
+    post {
+        always {
+            // Clean up old containers but not the new one
+            script {
+                // Fetch the container ID of the currently running container
+                def containerId = sh(script: "docker ps -q -f ancestor=${IMG_NAME}", returnStdout: true).trim()
+
+                // Remove all stopped containers with the same image except the current one
+                sh """
+                    for id in \$(docker ps -a -q -f ancestor=${IMG_NAME}); do
+                        if [ "\$id" != "${containerId}" ]; then
+                            docker rm -f \$id || true
+                        fi
+                    done
+                """
+            }
+
+            // Clean up built Docker images from disk
+            script {
+                sh 'docker rmi $IMG_NAME || true'
+            }
+
+            // Clean build artifacts from Jenkins server
+            cleanWs()
         }
     }
 }
