@@ -40,7 +40,7 @@ pipeline {
             steps {
                 script {
                     // Run pylint with PYTHONPATH set
-                    sh 'docker run --rm -e PYTHONPATH=/app $IMG_NAME pylint polybot'
+                    sh 'docker run --rm -e PYTHONPATH=/polybot $IMG_NAME pylint polybot'
                     // Run pytest
                     sh 'docker run --rm $IMG_NAME pytest'
                 }
