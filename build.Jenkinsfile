@@ -41,6 +41,8 @@ pipeline {
                 script {
                     // Run pylint with PYTHONPATH set
                     sh '''
+                    cd polybot
+                    pip install -r requirements.txt
                     python3 -m pylint *.py
                     '''
 
