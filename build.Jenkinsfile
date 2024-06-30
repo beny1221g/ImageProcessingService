@@ -1,6 +1,6 @@
 pipeline {
     options {
-        buildDiscarder(logRotator(daysToKeepStr: '30'))
+        buildDiscarder(logRotator(daysToKeepStr: '14'))
         disableConcurrentBuilds()
         timestamps()
     }
@@ -22,15 +22,14 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
-                        // Use correct Docker login syntax
                         sh """
                             cd polybot
                             echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
 
-                            docker build -t beny14/${IMG_NAME} .
-                            docker tag beny14/${IMG_NAME} beny14/${IMG_NAME}
-                            docker push beny14/${IMG_NAME}
-                            docker push beny14/${IMG_NAME}
+                            docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
+                            docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
+                            docker push ${DOCKER_REPO}:${BUILD_NUMBER}
+                            docker push ${DOCKER_REPO}:latest
                         """
                     }
                 }
@@ -40,7 +39,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Run pylint in a virtual environment
                     sh '''
                     cd polybot
                     python3 -m venv venv
@@ -56,12 +54,9 @@ pipeline {
 
     post {
         always {
-            // Clean up old containers but not the new one
             script {
-                // Fetch the container ID of the currently running container
                 def containerId = sh(script: "docker ps -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}", returnStdout: true).trim()
 
-                // Remove all stopped containers with the same image except the current one
                 sh """
                     for id in \$(docker ps -a -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}); do
                         if [ "\$id" != "${containerId}" ]; then
@@ -71,14 +66,12 @@ pipeline {
                 """
             }
 
-            // Clean up old Docker images but keep the new one
             script {
                 sh """
                     docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
                 """
             }
 
-            // Clean build artifacts from Jenkins server
             cleanWs()
         }
     }
