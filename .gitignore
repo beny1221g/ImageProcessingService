@@ -8,7 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+bu
 develop-eggs/
 dist/
 downloads/
@@ -25,6 +25,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+jenkis_try
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
