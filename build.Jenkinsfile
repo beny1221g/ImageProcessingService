@@ -36,13 +36,15 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install -r requirements.txt
-                    python3 -m pylint polybot/*.py
-                    deactivate
-                    '''
+                    docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
+                        sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        python3 -m pylint polybot/*.py
+                        deactivate
+                        '''
+                    }
                 }
             }
         }
