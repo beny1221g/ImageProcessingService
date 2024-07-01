@@ -1,6 +1,6 @@
 pipeline {
     options {
-        buildDiscarder(logRotator(daysToKeepStr: '14'))
+        buildDiscarder(logRotator(daysToKeepStr: '3'))
         disableConcurrentBuilds()
         timestamps()
     }
@@ -48,7 +48,7 @@ pipeline {
                 }
             }
         }
-    }
+
 
     post {
         always {
@@ -63,7 +63,6 @@ pipeline {
                     done
                 """
             }
-
             script {
                 sh """
                     docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true

@@ -5,3 +5,4 @@ flask>=2.3.2
 matplotlib>=3.7.5
 pylint>=3.2.3
 opencv-python>=4.5.3.56
+telebot>=0.0.4

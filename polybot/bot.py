@@ -7,7 +7,6 @@ import os
 # load environment variables
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-
 # Check if TELEGRAM_TOKEN is not none
 if TELEGRAM_TOKEN is None:
     print("Error  : TELEGRAM_TOKEN is not set in the .env file.")
@@ -19,6 +18,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # Dictionary to store images temporarily
 user_images = {}
 
+
 # handler for the /start command
 @bot.message_handler(commands=['start'])
 def handle_start(message):
@@ -27,12 +27,13 @@ def handle_start(message):
                                       "- Rotate: turning the image upside down.\n"
                                       "- Salt and Pepper: Adds random bright and dark pixels to an image.\n"
                                       "- Segment: Divides an image into parts based on color.\n"
-                                      "- Grayscale: Converts the image to grayscale.\n" 
+                                      "- Grayscale: Converts the image to grayscale.\n"
                                       "- Sharpen: Enhances the edges and details in the image.\n"
-                                      "- Emboss: Creates a raised effect by highlighting the edges.\n" 
+                                      "- Emboss: Creates a raised effect by highlighting the edges.\n"
                                       "- Invert Colors: Inverts the colors of the image.\n"
                                       "- Oil Painting: Applies an oil painting-like effect to the image.\n"
                                       "- Cartoonize: Creates a cartoon-like version of the image.\n")
+
 
 # handler for receiving photos
 @bot.message_handler(content_types=['photo'])
@@ -84,18 +85,23 @@ def handle_image(message):
                 # this is the first img
                 print("This is the first image for concatenation")
                 user_images[message.chat.id]['concat_pending'] = image_path
-                bot.reply_to(message, "First image saved successfully! Now please send the second image to concatenate with.")
+                bot.reply_to(message,
+                             "First image saved successfully! Now please send the second image to concatenate with.")
         else:
             # this is the first img
             print("This is the first image received")
             user_images[message.chat.id] = {'concat_pending': image_path}
-            bot.reply_to(message, "First image saved successfully! To apply the concatenation filter, please send another image or choose a filter from the list at the top of the page to apply a filter.")
+            bot.reply_to(message,
+                         "First image saved successfully! To apply the concatenation filter, please send another image or choose a filter from the list at the top of the page to apply a filter.")
     except Exception as e:
         print(f"Error handling image: {e}")
         bot.reply_to(message, f"Error handling image: {e}")
 
+
 # handler for filter selection
-@bot.message_handler(func=lambda message: message.text.lower() in ['blur', 'rotate', 'salt and pepper', 'segment','grayscale','sharpen','emboss','invert colors','oil painting','cartoonize'])
+@bot.message_handler(
+    func=lambda message: message.text.lower() in ['blur', 'rotate', 'salt and pepper', 'segment', 'grayscale',
+                                                  'sharpen', 'emboss', 'invert colors', 'oil painting', 'cartoonize'])
 def handle_filter(message):
     try:
         # Check if the user has previously sent an image
@@ -136,7 +142,8 @@ def handle_filter(message):
             # check if the filter was applied successfully
             if processed_image is not None:
                 # save and send the processed image
-                processed_image_path = img_processor.save_image(processed_image, suffix=f'_{filter_name.replace(" ", "_")}')
+                processed_image_path = img_processor.save_image(processed_image,
+                                                                suffix=f'_{filter_name.replace(" ", "_")}')
                 with open(processed_image_path, 'rb') as photo_file:
                     bot.send_photo(message.chat.id, photo_file)
             else:
