@@ -1,15 +1,16 @@
+import os
 import telebot
 import cv2
-from polybot.img_proc import Img
 from dotenv import load_dotenv
-import os
+from polybot.img_proc import Img
 
 # load environment variables
 load_dotenv()
+
+# Check if TELEGRAM_TOKEN is set in the .env file
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-# Check if TELEGRAM_TOKEN is not none
-if TELEGRAM_TOKEN is None:
-    print("Error  : TELEGRAM_TOKEN is not set in the .env file.")
+if not TELEGRAM_TOKEN:
+    print("Error: TELEGRAM_TOKEN is not set in the .env file.")
     exit(1)
 
 # initialize telegram-bot
@@ -18,22 +19,20 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # Dictionary to store images temporarily
 user_images = {}
 
-
 # handler for the /start command
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    bot.send_message(message.chat.id, "Hello!\n\n Send me an image then choose a filter , options:\n"
-                                      "- Blur: Apply a blur to the image to reduce noise and detail.\n"
-                                      "- Rotate: turning the image upside down.\n"
-                                      "- Salt and Pepper: Adds random bright and dark pixels to an image.\n"
-                                      "- Segment: Divides an image into parts based on color.\n"
-                                      "- Grayscale: Converts the image to grayscale.\n"
-                                      "- Sharpen: Enhances the edges and details in the image.\n"
-                                      "- Emboss: Creates a raised effect by highlighting the edges.\n"
-                                      "- Invert Colors: Inverts the colors of the image.\n"
-                                      "- Oil Painting: Applies an oil painting-like effect to the image.\n"
-                                      "- Cartoonize: Creates a cartoon-like version of the image.\n")
-
+    bot.send_message(message.chat.id, "Hello!\n\nSend me an image and choose a filter:\n"
+                                      "- Blur: Reduce noise and detail.\n"
+                                      "- Rotate: Turn the image upside down.\n"
+                                      "- Salt and Pepper: Add random bright and dark pixels.\n"
+                                      "- Segment: Divide the image based on color.\n"
+                                      "- Grayscale: Convert to grayscale.\n"
+                                      "- Sharpen: Enhance edges and details.\n"
+                                      "- Emboss: Create a raised effect.\n"
+                                      "- Invert Colors: Invert the image colors.\n"
+                                      "- Oil Painting: Apply an oil painting-like effect.\n"
+                                      "- Cartoonize: Create a cartoon-like version.\n")
 
 # handler for receiving photos
 @bot.message_handler(content_types=['photo'])
@@ -52,26 +51,26 @@ def handle_image(message):
         with open(image_path, 'wb') as new_file:
             new_file.write(downloaded_file)
 
-        # check if this is the first img or the second img for concat
+        # check if this is the first image or the second image for concatenation
         if message.chat.id in user_images:
             print("User already has an image in memory")
             if 'concat_pending' in user_images[message.chat.id]:
                 print("This is the second image for concatenation")
-                # this is the second image for concat
+                # this is the second image for concatenation
                 second_image_path = image_path
                 first_image_path = user_images[message.chat.id]['concat_pending']
-                del user_images[message.chat.id]['concat_pending']  # remove the pending to free it to next pending
+                del user_images[message.chat.id]['concat_pending']
 
                 # load the images
+                img_processor = Img(first_image_path)
                 first_image_data = cv2.imread(first_image_path)
                 second_image_data = cv2.imread(second_image_path)
 
-                # concat the imges
-                img_processor = Img(first_image_path)
+                # concatenate the images
                 concatenated_image = img_processor.concat(second_image_data)
                 if concatenated_image is not None:
                     print("Concatenation successful")
-                    # save and send the concat img
+                    # save and send the concatenated image
                     processed_image_path = img_processor.save_image(concatenated_image, suffix='_concatenated')
                     with open(processed_image_path, 'rb') as photo_file:
                         bot.send_photo(message.chat.id, photo_file)
@@ -82,21 +81,18 @@ def handle_image(message):
                 # clear user history
                 del user_images[message.chat.id]
             else:
-                # this is the first img
+                # this is the first image
                 print("This is the first image for concatenation")
                 user_images[message.chat.id]['concat_pending'] = image_path
-                bot.reply_to(message,
-                             "First image saved successfully! Now please send the second image to concatenate with.")
+                bot.reply_to(message, "First image saved successfully! Now please send the second image to concatenate with.")
         else:
-            # this is the first img
+            # this is the first image
             print("This is the first image received")
             user_images[message.chat.id] = {'concat_pending': image_path}
-            bot.reply_to(message,
-                         "First image saved successfully! To apply the concatenation filter, please send another image or choose a filter from the list at the top of the page to apply a filter.")
+            bot.reply_to(message, "First image saved successfully! To apply the concatenation filter, please send another image or choose a filter from the list at the top of the page to apply a filter.")
     except Exception as e:
         print(f"Error handling image: {e}")
         bot.reply_to(message, f"Error handling image: {e}")
-
 
 # handler for filter selection
 @bot.message_handler(
@@ -142,8 +138,7 @@ def handle_filter(message):
             # check if the filter was applied successfully
             if processed_image is not None:
                 # save and send the processed image
-                processed_image_path = img_processor.save_image(processed_image,
-                                                                suffix=f'_{filter_name.replace(" ", "_")}')
+                processed_image_path = img_processor.save_image(processed_image, suffix=f'_{filter_name.replace(" ", "_")}')
                 with open(processed_image_path, 'rb') as photo_file:
                     bot.send_photo(message.chat.id, photo_file)
             else:
@@ -156,5 +151,5 @@ def handle_filter(message):
     except Exception as e:
         bot.reply_to(message, f"Error processing image: {e}")
 
-
+# Start polling
 bot.polling()
