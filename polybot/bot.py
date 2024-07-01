@@ -22,17 +22,18 @@ user_images = {}
 # handler for the /start command
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    bot.send_message(message.chat.id, "Hello!\n\nSend me an image and choose a filter:\n"
-                                      "- Blur: Reduce noise and detail.\n"
-                                      "- Rotate: Turn the image upside down.\n"
-                                      "- Salt and Pepper: Add random bright and dark pixels.\n"
-                                      "- Segment: Divide the image based on color.\n"
-                                      "- Grayscale: Convert to grayscale.\n"
-                                      "- Sharpen: Enhance edges and details.\n"
-                                      "- Emboss: Create a raised effect.\n"
-                                      "- Invert Colors: Invert the image colors.\n"
-                                      "- Oil Painting: Apply an oil painting-like effect.\n"
-                                      "- Cartoonize: Create a cartoon-like version.\n")
+    bot.send_message(message.chat.id,
+                "Hello!\n\nSend me an image and choose a filter:\n"
+                     "- Blur: Reduce noise and detail.\n"
+                     "- Rotate: Turn the image upside down.\n"
+                     "- Salt and Pepper: Add random bright and dark pixels.\n"
+                     "- Segment: Divide the image based on color.\n"
+                     "- Grayscale: Convert to grayscale.\n"
+                     "- Sharpen: Enhance edges and details.\n"
+                     "- Emboss: Create a raised effect.\n"
+                     "- Invert Colors: Invert the image colors.\n"
+                     "- Oil Painting: Apply an oil painting-like effect.\n"
+                     "- Cartoonize: Create a cartoon-like version.\n")
 
 # handler for receiving photos
 @bot.message_handler(content_types=['photo'])
