@@ -10,12 +10,12 @@ pipeline {
         DOCKER_REPO = "beny14/polybot"
     }
 
-    agent {
-        docker {
-            image 'beny14/dockerfile_agent:latest'
-            args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+//     agent {
+//         docker {
+//             image 'beny14/dockerfile_agent:latest'
+//             args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+//         }
+//     }
 
     stages {
         stage('Build') {
