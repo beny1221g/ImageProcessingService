@@ -48,7 +48,7 @@ pipeline {
                 }
             }
         }
-
+    } // End of stages block
 
     post {
         always {
