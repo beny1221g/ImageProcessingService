@@ -41,6 +41,8 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
+                        pylint --disable=C0301 polybot/*.py
+                        pylint --disable=C0114 polybot/*.py
                         python3 -m pylint polybot/*.py
                         deactivate
                         '''
