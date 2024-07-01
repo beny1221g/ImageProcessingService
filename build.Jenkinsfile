@@ -23,7 +23,6 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
                         sh """
-
                             echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                             docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                             docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
@@ -38,7 +37,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-
                     python3 -m venv venv
                     . venv/bin/activate
                     pip install -r requirements.txt

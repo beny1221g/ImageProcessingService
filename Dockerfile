@@ -1,10 +1,10 @@
-# Use the official Python slim image
+# Use an official Python runtime as a parent image
 FROM python:3.10.12-slim-bullseye
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Install required system packages
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgl1-mesa-glx \
@@ -12,17 +12,19 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file into the container
+# Copy the requirements file and install Python dependencies
 COPY requirements.txt .
-
-# Install the required Python packages
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
+# Copy the rest of the application code
 COPY . .
-RUN cd polybot
-# Specify the command to run the application
+
+# Set the working directory to the polybot directory
+WORKDIR /app/polybot
+
+# Run the bot when the container launches
 CMD ["python3", "bot.py"]
 
+# Expose port 5000
 EXPOSE 5000
