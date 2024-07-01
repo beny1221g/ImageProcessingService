@@ -23,9 +23,8 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
                         sh """
-                            cd polybot
-                            echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
 
+                            echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                             docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                             docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
                             docker push ${DOCKER_REPO}:${BUILD_NUMBER}
@@ -40,11 +39,11 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    cd polybot
+
                     python3 -m venv venv
                     . venv/bin/activate
                     pip install -r requirements.txt
-                    python3 -m pylint *.py
+                    python3 -m pylint polybot/*.py
                     deactivate
                     '''
                 }
