@@ -23,12 +23,11 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
                         sh """
-
+                            cd polybot
                             echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                             docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                             docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
                             docker push ${DOCKER_REPO}:${BUILD_NUMBER}
-                            docker push ${DOCKER_REPO}:latest
                         """
                     }
                 }
