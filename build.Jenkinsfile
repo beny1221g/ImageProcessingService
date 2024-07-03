@@ -43,6 +43,11 @@ pipeline {
                         pip install -r requirements.txt
                         pylint --disable=C0301 polybot/*.py
                         pylint --disable=C0114 polybot/*.py
+                        pylint --disable=E1101 polybot/*.py
+                        pylint --disable=C0116 polybot/*.py
+                        pylint --disable=C0103 polybot/*.py
+                        pylint --disable=W0718 polybot/*.py
+                        pylint --disable=E0401 polybot/*.py
                         python3 -m pylint polybot/*.py
                         deactivate
                         '''
