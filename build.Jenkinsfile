@@ -48,6 +48,7 @@ pipeline {
                         pylint --disable=C0103 polybot/*.py
                         pylint --disable=W0718 polybot/*.py
                         pylint --disable=E0401 polybot/*.py
+                        pylint --disable=W0613 polybot/*.py
                         python3 -m pylint polybot/*.py
                         deactivate
                         '''
