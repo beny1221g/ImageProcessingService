@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgl1-mesa-glx \
     python3-venv \
-    snyk \
     && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g snyk
 
 # Copy the requirements file and install Python dependencies
 COPY requirements.txt .
