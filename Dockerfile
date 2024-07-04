@@ -4,25 +4,25 @@ FROM python:3.13.0b2-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
         libglib2.0-0 \
         libgl1-mesa-glx \
-        python3-venv \
         npm \
+        zlib1g-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Snyk globally using npm
 RUN npm install -g snyk
 
-# Install zlib with security updates (if available)
-RUN apt-get update && apt-get install -y --only-upgrade zlib1g
-
-# Copy the requirements file and install Python dependencies
+# Upgrade pip and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --upgrade pip \
+    && python -m pip install --no-cache-dir -r requirements.txt \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the rest of the application code
 COPY . .
@@ -30,10 +30,8 @@ COPY . .
 # Set the working directory to the polybot directory
 WORKDIR /app/polybot
 
-# Run the bot when the container launches
-CMD ["python3", "bot.py"]
-
 # Expose port 5000
 EXPOSE 5000
 
-#CMD "python3 -m polybot.bot"
+# Command to run the bot when the container launches
+CMD ["python3", "bot.py"]
