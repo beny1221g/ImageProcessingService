@@ -8,6 +8,7 @@ pipeline {
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
+        SNYK_TOKEN = credentials('SNYK_TOKEN')
     }
 
     agent {
@@ -37,10 +38,10 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
                     script {
-                        sh '''
+                        sh """
                             snyk auth ${SNYK_TOKEN}
                             snyk test --docker ${DOCKER_REPO}:${BUILD_NUMBER}
-                        '''
+                        """
                     }
                 }
             }
