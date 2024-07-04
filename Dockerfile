@@ -10,9 +10,13 @@ RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     python3-venv \
     npm \
+    autoremove \
     && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g snyk
+
+# Install zlib with security updates (if available)
+RUN apt-get update && apt-get install -y --only-upgrade zlib1g
 
 # Copy the requirements file and install Python dependencies
 COPY requirements.txt .
