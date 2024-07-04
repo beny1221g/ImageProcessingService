@@ -1,0 +1,10 @@
+version: v1.15.0
+ignore:
+  "SNYK-ID-EXAMPLE":
+    - "*":
+        reason: "Reason for ignoring this vulnerability"
+        expires: "2024-12-31T12:00:00Z"
+  "ANOTHER-SNYK-ID":
+    - "*":
+        reason: "Reason for ignoring this vulnerability"
+        expires: "2024-12-31T12:00:00Z"
