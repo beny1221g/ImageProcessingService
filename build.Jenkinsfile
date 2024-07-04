@@ -23,12 +23,16 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
-                        sh """
-                            echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
-                            docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
-                            docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
-                            docker push ${DOCKER_REPO}:${BUILD_NUMBER}
-                        """
+                        try {
+                            sh """
+                                echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
+                                docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
+                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
+                                docker push ${DOCKER_REPO}:${BUILD_NUMBER}
+                            """
+                        } catch (Exception e) {
+                            error "Build failed: ${e.getMessage()}"
+                        }
                     }
                 }
             }
@@ -38,10 +42,14 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
                     script {
-                        sh """
-                            snyk auth ${SNYK_TOKEN}
-                            snyk test --docker ${DOCKER_REPO}:${BUILD_NUMBER}
-                        """
+                        try {
+                            sh """
+                                snyk auth ${SNYK_TOKEN}
+                                snyk test --docker ${DOCKER_REPO}:${BUILD_NUMBER}
+                            """
+                        } catch (Exception e) {
+                            error "Snyk scan failed: ${e.getMessage()}"
+                        }
                     }
                 }
             }
@@ -50,14 +58,18 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
-                        sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install -r requirements.txt
-                        pylint --disable=C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py
-                        deactivate
-                        '''
+                    try {
+                        docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
+                            sh '''
+                            python3 -m venv venv
+                            . venv/bin/activate
+                            pip install -r requirements.txt
+                            pylint --disable=C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py
+                            deactivate
+                            '''
+                        }
+                    } catch (Exception e) {
+                        error "Test failed: ${e.getMessage()}"
                     }
                 }
             }
@@ -84,6 +96,15 @@ pipeline {
             }
 
             cleanWs()
+        }
+    }
+
+    post {
+        failure {
+            script {
+                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
+                echo "Error occurred: ${errorMessage}"
+            }
         }
     }
 }
