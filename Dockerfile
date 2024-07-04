@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.10.12-slim-bullseye
+FROM python:3.13.0b2-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgl1-mesa-glx \
     python3-venv \
-    snyk\
+    snyk \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file and install Python dependencies
