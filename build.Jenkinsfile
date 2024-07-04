@@ -97,9 +97,7 @@ pipeline {
 
             cleanWs()
         }
-    }
 
-    post {
         failure {
             script {
                 def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
