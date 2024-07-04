@@ -8,7 +8,6 @@ pipeline {
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
-        SNYK_TOKEN = credentials('SNYK_TOKEN') // Use the credential you created
     }
 
     agent {
