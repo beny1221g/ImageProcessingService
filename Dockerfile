@@ -4,13 +4,15 @@ FROM python:3.13.0b2-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and build tools
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libglib2.0-0 \
         libgl1-mesa-glx \
         npm \
         zlib1g-dev \
+        build-essential \
+        python3-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
