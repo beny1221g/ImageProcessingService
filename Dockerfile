@@ -1,21 +1,17 @@
 # Use an official Python runtime as a parent image
 FROM python:3.13.0b2-slim
 
-# Install system dependencies
+# Set the working directory in the container
+WORKDIR /app
+
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgl1-mesa-glx \
     python3-venv \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js and npm (if not already included in base image)
-# Example if you decide to use Node.js and npm
-# RUN apt-get install -y nodejs npm
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Install snyk globally using npm
 RUN npm install -g snyk
 
 # Copy the requirements file and install Python dependencies
@@ -32,5 +28,7 @@ WORKDIR /app/polybot
 # Run the bot when the container launches
 CMD ["python3", "bot.py"]
 
-# Expose port 5000 (if necessary)
+# Expose port 5000
 EXPOSE 5000
+
+#CMD "python3 -m polybot.bot"
