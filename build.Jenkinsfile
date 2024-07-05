@@ -46,7 +46,7 @@ pipeline {
                             sh """
                                 snyk auth ${SNYK_TOKEN}
                                 snyk config set disableSuggestions=true
-                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "snyk container test ${DOCKER_REPO}:${BUILD_NUMBER}"
+                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed "
                             """
                         } catch (Exception e) {
                             echo "Snyk scan failed: ${e.getMessage()}"
