@@ -45,11 +45,10 @@ pipeline {
                         try {
                             sh """
                                 snyk auth ${SNYK_TOKEN}
-                                snyk config set disableSuggestions=true
-                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed "
+                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} --file=Dockerfile || echo "Snyk scan failed"
                             """
                         } catch (Exception e) {
-                            echo "Snyk scan failed: ${e.getMessage()}"
+                            error "Snyk scan failed: ${e.getMessage()}"
                         }
                     }
                 }
@@ -65,7 +64,7 @@ pipeline {
                             python3 -m venv venv
                             . venv/bin/activate
                             pip install -r requirements.txt
-                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py
+                            pylint --disable=C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py
                             deactivate
                             '''
                         }
