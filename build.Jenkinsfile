@@ -46,13 +46,33 @@ pipeline {
                             sh """
                                 snyk auth ${SNYK_TOKEN}
                                 snyk config set disableSuggestions=true
-                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER}  || echo "Snyk scan failed"
-
+                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
                             """
                         } catch (Exception e) {
                             error "Snyk scan failed: ${e.getMessage()}"
                         }
                     }
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                script {
+                    docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
+                        sh """
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        python3 -m pytest --junitxml results.xml tests/*.py
+                        deactivate
+                        """
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'results.xml'
                 }
             }
         }
@@ -72,6 +92,14 @@ pipeline {
                         }
                     } catch (Exception e) {
                         error "Test failed: ${e.getMessage()}"
+                    }
+                }
+            }
+            post {
+                always {
+                    script {
+                        archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
+                        recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pyLint(name: 'Pylint', pattern: '**/pylint.log')]
                     }
                 }
             }
