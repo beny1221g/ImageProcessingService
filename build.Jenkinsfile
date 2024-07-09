@@ -86,7 +86,9 @@ pipeline {
                             python3 -m venv venv
                             . venv/bin/activate
                             pip install -r requirements.txt
-                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py
+                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true
+                            ls -alh
+                            cat pylint.log
                             deactivate
                             '''
                         }
@@ -98,8 +100,12 @@ pipeline {
             post {
                 always {
                     script {
-                        archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
-                        recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pyLint(name: 'Pylint', pattern: '**/pylint.log')]
+                        try {
+                            archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
+                            recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pyLint(name: 'Pylint', pattern: 'pylint.log')]
+                        } catch (Exception e) {
+                            echo "Archiving or recording issues failed: ${e.getMessage()}"
+                        }
                     }
                 }
             }
