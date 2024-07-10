@@ -6,9 +6,9 @@ pipeline {
     }
 
     environment {
-        IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
+        TELEGRAM_TOKEN = credentials('telegram_bot_token')
     }
 
     agent {
@@ -56,6 +56,18 @@ pipeline {
 //             }
 //         }
 
+        stage('Prepare Environment') {
+            steps {
+                withCredentials([string(credentialsId: 'TELEGRAM_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                    script {
+                        sh """
+                            echo "TELEGRAM_TOKEN=${TELEGRAM_TOKEN}" > .env
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Unit Test') {
             steps {
                 script {
@@ -64,7 +76,7 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
-                        python3 -m pytest --junitxml results.xml polybot/*.py
+                        python3 -m unittest discover -s tests -p "*.py" > unittest-results.xml || true
                         deactivate
                         """
                     }
@@ -72,7 +84,7 @@ pipeline {
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: 'results.xml'
+                    junit allowEmptyResults: true, testResults: 'unittest-results.xml'
                 }
             }
         }
@@ -80,20 +92,16 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    try {
-                        docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
-                            sh '''
-                            python3 -m venv venv
-                            . venv/bin/activate
-                            pip install -r requirements.txt
-                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true
-                            ls -alh
-                            cat pylint.log
-                            deactivate
-                            '''
-                        }
-                    } catch (Exception e) {
-                        error "Test failed: ${e.getMessage()}"
+                    docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
+                        sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true
+                        ls -alh
+                        cat pylint.log
+                        deactivate
+                        '''
                     }
                 }
             }
@@ -102,9 +110,7 @@ pipeline {
                     script {
                         try {
                             archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
-                            // Record issues using a general method if available, or simply echo the log
-                            echo "Pylint log content:"
-                            sh 'cat pylint.log'
+                            recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pylint(name: 'Pylint', pattern: 'pylint.log')]
                         } catch (Exception e) {
                             echo "Archiving or recording issues failed: ${e.getMessage()}"
                         }
