@@ -111,7 +111,7 @@ pipeline {
                             archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
                             recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pylint(name: 'Pylint', pattern: 'pylint.log')]
                         } catch (Exception e) {
-                            echo "Archiving or recording issues failed: ${e.getMessage()}"
+                            echo "Archiving or recording issues failed : ${e.getMessage()}"
                         }
                     }
                 }
