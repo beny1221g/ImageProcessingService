@@ -8,7 +8,7 @@ pipeline {
     environment {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
-        TELEGRAM_TOKEN = credentials('telegram_bot_token')
+        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN') // Updated to match your Jenkins credentials ID
     }
 
     agent {
@@ -38,32 +38,31 @@ pipeline {
             }
         }
 
-//         stage('Snyk Scan') {
-//             steps {
-//                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-//                     script {
-//                         try {
-//                             sh """
-//                                 snyk auth ${SNYK_TOKEN}
-//                                 snyk config set disableSuggestions=true
-//                                 snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
-//                             """
-//                         } catch (Exception e) {
-//                             error "Snyk scan failed: ${e.getMessage()}"
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+        // Commented out the Snyk Scan stage for now
+        // stage('Snyk Scan') {
+        //     steps {
+        //         withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+        //             script {
+        //                 try {
+        //                     sh """
+        //                         snyk auth ${SNYK_TOKEN}
+        //                         snyk config set disableSuggestions=true
+        //                         snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
+        //                     """
+        //                 } catch (Exception e) {
+        //                     error "Snyk scan failed: ${e.getMessage()}"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Prepare Environment') {
             steps {
-                withCredentials([string(credentialsId: 'TELEGRAM_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
-                    script {
-                        sh """
-                            echo "TELEGRAM_TOKEN=${TELEGRAM_TOKEN}" > .env
-                        """
-                    }
+                script {
+                    sh """
+                        echo "TELEGRAM_TOKEN=${TELEGRAM_TOKEN}" > .env
+                    """
                 }
             }
         }
