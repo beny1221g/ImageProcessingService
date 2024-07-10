@@ -59,10 +59,12 @@ pipeline {
 
         stage('Prepare Environment') {
             steps {
-                script {
-                    sh """
-                        echo "TELEGRAM_TOKEN=${TELEGRAM_TOKEN}" > .env
-                    """
+                withCredentials([string(credentialsId: 'TELEGRAM_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                    script {
+                        sh """
+                            echo "TELEGRAM_TOKEN=${TELEGRAM_TOKEN}" > .env
+                        """
+                    }
                 }
             }
         }
@@ -109,9 +111,9 @@ pipeline {
                     script {
                         try {
                             archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
-                            recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pylint(name: 'Pylint', pattern: 'pylint.log')]
+                            recordIssues enabledForFailure: true, aggregatingResults: true, tools: [python(pattern: 'pylint.log', name: 'Pylint')]
                         } catch (Exception e) {
-                            echo "Archiving or recording issues failed : ${e.getMessage()}"
+                            echo "Archiving or recording issues failed: ${e.getMessage()}"
                         }
                     }
                 }
