@@ -8,7 +8,7 @@ pipeline {
     environment {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
-        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN') // Updated to match your Jenkins credentials ID
+        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
     }
 
     agent {
@@ -37,25 +37,6 @@ pipeline {
                 }
             }
         }
-
-        // Commented out the Snyk Scan stage for now
-        // stage('Snyk Scan') {
-        //     steps {
-        //         withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-        //             script {
-        //                 try {
-        //                     sh """
-        //                         snyk auth ${SNYK_TOKEN}
-        //                         snyk config set disableSuggestions=true
-        //                         snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
-        //                     """
-        //                 } catch (Exception e) {
-        //                     error "Snyk scan failed: ${e.getMessage()}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
 
         stage('Prepare Environment') {
             steps {
@@ -111,7 +92,7 @@ pipeline {
                     script {
                         try {
                             archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
-                            recordIssues enabledForFailure: true, aggregatingResults: true, tools: [pylint(pattern: 'pylint.log')]
+                            recordIssues tools: [pylint(pattern: 'pylint.log')]
                         } catch (Exception e) {
                             echo "Archiving or recording issues failed: ${e.getMessage()}"
                         }
