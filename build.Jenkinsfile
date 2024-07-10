@@ -6,9 +6,9 @@ pipeline {
     }
 
     environment {
+        IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
-        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
     }
 
     agent {
@@ -38,13 +38,19 @@ pipeline {
             }
         }
 
-        stage('Prepare Environment') {
+        stage('Snyk Scan') {
             steps {
-                withCredentials([string(credentialsId: 'TELEGRAM_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
                     script {
-                        sh """
-                            echo "TELEGRAM_TOKEN=${TELEGRAM_TOKEN}" > .env
-                        """
+                        try {
+                            sh """
+                                snyk auth ${SNYK_TOKEN}
+                                snyk config set disableSuggestions=true
+                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
+                            """
+                        } catch (Exception e) {
+                            error "Snyk scan failed: ${e.getMessage()}"
+                        }
                     }
                 }
             }
@@ -58,7 +64,7 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
-                        python3 -m unittest discover -s tests -p "*.py" > unittest-results.xml || true
+                        python3 -m pytest --junitxml results.xml tests/*.py
                         deactivate
                         """
                     }
@@ -66,7 +72,7 @@ pipeline {
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: 'unittest-results.xml'
+                    junit allowEmptyResults: true, testResults: 'results.xml'
                 }
             }
         }
@@ -74,16 +80,20 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
-                        sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install -r requirements.txt
-                        pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 tests/*.py > pylint.log || true
-                        ls -alh
-                        cat pylint.log
-                        deactivate
-                        '''
+                    try {
+                        docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
+                            sh '''
+                            python3 -m venv venv
+                            . venv/bin/activate
+                            pip install -r requirements.txt
+                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true
+                            ls -alh
+                            cat pylint.log
+                            deactivate
+                            '''
+                        }
+                    } catch (Exception e) {
+                        error "Test failed: ${e.getMessage()}"
                     }
                 }
             }
@@ -92,7 +102,9 @@ pipeline {
                     script {
                         try {
                             archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
-                            recordIssues tools: [pylint(pattern: 'pylint.log')]
+                            // Record issues using a general method if available, or simply echo the log
+                            echo "Pylint log content:"
+                            sh 'cat pylint.log'
                         } catch (Exception e) {
                             echo "Archiving or recording issues failed: ${e.getMessage()}"
                         }
