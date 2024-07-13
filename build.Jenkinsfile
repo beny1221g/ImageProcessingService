@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
-        DOCKER_REPO = "your-nexus-repo-url/polybot" // Update with your Nexus Docker repository URL
+        DOCKER_REPO = "http://192.168.1.75:8081/#browse/browse:docker-hosted" // Update with your Nexus Docker repository URL
         NEXUS_USER = credentials('nexus_user')
         NEXUS_PASS = credentials('nexus_pass')
         SNYK_TOKEN = credentials('SNYK_TOKEN')
