@@ -3,6 +3,7 @@ pipeline {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
         disableConcurrentBuilds()
         timestamps()
+        timeout(time: 120, unit: 'MINUTES') // Set a global timeout for the pipeline
     }
 
     environment {
@@ -25,12 +26,14 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
                     script {
                         try {
+                            echo "Starting Docker build"
                             sh """
                                 echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                                 docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
                                 docker push ${DOCKER_REPO}:${BUILD_NUMBER}
                             """
+                            echo "Docker build and push completed"
                         } catch (Exception e) {
                             error "Build failed: ${e.getMessage()}"
                         }
@@ -39,37 +42,23 @@ pipeline {
             }
         }
 
-//         stage('Snyk Scan') {
-//             steps {
-//                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-//                     script {
-//                         try {
-//                             sh """
-//                                 snyk auth ${SNYK_TOKEN}
-//                                 snyk config set disableSuggestions=true
-//                                 snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
-//                             """
-//                         } catch (Exception e) {
-//                             error "Snyk scan failed: ${e.getMessage()}"
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
         stage('Unit Test') {
             steps {
                 script {
+                    echo "Starting Unit Tests"
                     docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
                         sh """
                         python3 -m venv venv
                         . venv/bin/activate
+                        pip install --upgrade pip
                         pip install -r requirements.txt
-                        pip install pytest-xdist
-                        python3 -m pytest -n auto --junitxml results.xml polybot/*.py
+                        pip install pytest-xdist pytest-timeout
+                        # Run pytest with verbosity and timeout for each test
+                        python3 -m pytest -n 4 --timeout=300 --junitxml results.xml polybot/*.py
                         deactivate
                         """
                     }
+                    echo "Unit Tests completed"
                 }
             }
             post {
@@ -83,6 +72,7 @@ pipeline {
             steps {
                 script {
                     try {
+                        echo "Starting Lint Tests"
                         docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
                             sh '''
                             python3 -m venv venv
@@ -94,6 +84,7 @@ pipeline {
                             deactivate
                             '''
                         }
+                        echo "Lint Tests completed"
                     } catch (Exception e) {
                         error "Test failed: ${e.getMessage()}"
                     }
@@ -118,6 +109,7 @@ pipeline {
     post {
         always {
             script {
+                echo "Cleaning up Docker containers and images"
                 def containerId = sh(script: "docker ps -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}", returnStdout: true).trim()
 
                 sh """
@@ -127,14 +119,12 @@ pipeline {
                         fi
                     done
                 """
-            }
-            script {
                 sh """
                     docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
                 """
+                cleanWs()
+                echo "Cleanup completed"
             }
-
-            cleanWs()
         }
 
         failure {
