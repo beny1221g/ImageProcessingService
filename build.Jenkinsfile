@@ -11,8 +11,6 @@ pipeline {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
         TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
-        NEXUS_CREDENTIAL = credentials('nexus_credentials_id') // Replace with your Nexus credentials ID
-        NEXUS_REPO_URL = "http://localhost:8081/repository/docker-repo/" // Replace with your Nexus repository URL
     }
 
     agent {
@@ -23,17 +21,17 @@ pipeline {
     }
 
     stages {
-        stage('Build and Push Docker Image') {
+        stage('Build') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
+                    script {
                         try {
                             echo "Starting Docker build"
                             sh """
-                                echo ${NEXUS_PASS} | docker login -u ${NEXUS_USER} --password-stdin ${NEXUS_REPO_URL}
+                                echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                                 docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
-                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
-                                docker push ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
+                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
+                                docker push ${DOCKER_REPO}:${BUILD_NUMBER}
                             """
                             echo "Docker build and push completed"
                         } catch (Exception e) {
@@ -70,7 +68,7 @@ pipeline {
             }
         }
 
-        stage('Lint Test') {
+        stage('Test') {
             steps {
                 script {
                     try {
@@ -88,7 +86,7 @@ pipeline {
                         }
                         echo "Lint Tests completed"
                     } catch (Exception e) {
-                        error "Lint Tests failed: ${e.getMessage()}"
+                        error "Test failed: ${e.getMessage()}"
                     }
                 }
             }
@@ -131,7 +129,7 @@ pipeline {
 
         failure {
             script {
-                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed '
+                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
                 echo "Error occurred: ${errorMessage}"
             }
         }
