@@ -103,23 +103,30 @@ pipeline {
     post {
         always {
             script {
-                def containerId = sh(script: "docker ps -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}", returnStdout: true).trim()
+                try {
+                    def containerId = sh(script: "docker ps -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}", returnStdout: true).trim()
 
-                sh """
-                    for id in \$(docker ps -a -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}); do
-                        if [ "\$id" != "${containerId}" ]; then
-                            docker rm -f \$id || true
-                        fi
-                    done
-                """
-            }
-            script {
-                sh """
-                    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
-                """
-            }
+                    sh """
+                        for id in \$(docker ps -a -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}); do
+                            if [ "\$id" != "${containerId}" ]; then
+                                docker rm -f \$id || true
+                            fi
+                        done
+                    """
+                } catch (Exception e) {
+                    error "Error cleaning up containers: ${e.getMessage()}"
+                }
 
-            cleanWs()
+                try {
+                    sh """
+                        docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
+                    """
+                } catch (Exception e) {
+                    error "Error cleaning up images: ${e.getMessage()}"
+                }
+
+                cleanWs()
+            }
         }
 
         failure {
