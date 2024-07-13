@@ -9,13 +9,13 @@ pipeline {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
+        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
     }
 
     agent {
         docker {
             image 'beny14/dockerfile_agent:latest'
             args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
-            TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
         }
     }
 
@@ -103,7 +103,6 @@ pipeline {
                     script {
                         try {
                             archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true
-                            // Record issues using a general method if available, or simply echo the log
                             echo "Pylint log content:"
                             sh 'cat pylint.log'
                         } catch (Exception e) {
