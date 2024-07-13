@@ -65,7 +65,8 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
-                        python3 -m pytest --junitxml results.xml polybot/*.py
+                        pip install pytest-xdist
+                        python3 -m pytest -n auto --junitxml results.xml polybot/*.py
                         deactivate
                         """
                     }
@@ -138,7 +139,7 @@ pipeline {
 
         failure {
             script {
-                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed '
+                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
                 echo "Error occurred: ${errorMessage}"
             }
         }
