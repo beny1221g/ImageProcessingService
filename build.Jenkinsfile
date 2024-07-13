@@ -131,7 +131,7 @@ pipeline {
 
         failure {
             script {
-                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
+                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed '
                 echo "Error occurred: ${errorMessage}"
             }
         }
