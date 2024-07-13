@@ -15,6 +15,7 @@ pipeline {
         docker {
             image 'beny14/dockerfile_agent:latest'
             args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+            TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
         }
     }
 
