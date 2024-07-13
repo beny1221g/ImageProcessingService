@@ -64,7 +64,7 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
-                        python3 -m pytest --junitxml results.xml tests/*.py
+                        python3 -m pytest --junitxml results.xml polybot/*.py
                         deactivate
                         """
                     }
