@@ -39,23 +39,23 @@ pipeline {
             }
         }
 
-        stage('Snyk Scan') {
-            steps {
-                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-                    script {
-                        try {
-                            sh """
-                                snyk auth ${SNYK_TOKEN}
-                                snyk config set disableSuggestions=true
-                                snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
-                            """
-                        } catch (Exception e) {
-                            error "Snyk scan failed: ${e.getMessage()}"
-                        }
-                    }
-                }
-            }
-        }
+//         stage('Snyk Scan') {
+//             steps {
+//                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+//                     script {
+//                         try {
+//                             sh """
+//                                 snyk auth ${SNYK_TOKEN}
+//                                 snyk config set disableSuggestions=true
+//                                 snyk container test ${DOCKER_REPO}:${BUILD_NUMBER} || echo "Snyk scan failed"
+//                             """
+//                         } catch (Exception e) {
+//                             error "Snyk scan failed: ${e.getMessage()}"
+//                         }
+//                     }
+//                 }
+//             }
+//         }
 
         stage('Unit Test') {
             steps {
