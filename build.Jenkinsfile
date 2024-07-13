@@ -3,15 +3,16 @@ pipeline {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
         disableConcurrentBuilds()
         timestamps()
+        timeout(time: 120, unit: 'MINUTES') // Set a global timeout for the pipeline
     }
 
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
-        DOCKER_REPO = "http://192.168.1.75:8081/repository/docker-hosted/" // Update with your Nexus Docker repository URL
-        NEXUS_USER = credentials('nexus_user')
-        NEXUS_PASS = credentials('nexus_pass')
+        DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
         TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
+        NEXUS_CREDENTIAL = credentials('nexus_credentials_id') // Replace with your Nexus credentials ID
+        NEXUS_REPO_URL = "http://localhost:8081/repository/docker-repo/" // Replace with your Nexus repository URL
     }
 
     agent {
@@ -22,20 +23,22 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
-                    try {
-                        echo "Logging into Nexus Docker repository with user: ${NEXUS_USER_USR}"
-                        sh """
-                            echo ${NEXUS_USER_PSW} | docker login -u ${NEXUS_USER_USR} --password-stdin ${DOCKER_REPO}
-                            docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
-                            docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
-                            docker push ${DOCKER_REPO}:${BUILD_NUMBER}
-                            docker push ${DOCKER_REPO}:latest
-                        """
-                    } catch (Exception e) {
-                        error "Build failed: ${e.getMessage()}"
+                    withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        try {
+                            echo "Starting Docker build"
+                            sh """
+                                echo ${NEXUS_PASS} | docker login -u ${NEXUS_USER} --password-stdin ${NEXUS_REPO_URL}
+                                docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
+                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
+                                docker push ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
+                            """
+                            echo "Docker build and push completed"
+                        } catch (Exception e) {
+                            error "Build failed: ${e.getMessage()}"
+                        }
                     }
                 }
             }
@@ -44,17 +47,20 @@ pipeline {
         stage('Unit Test') {
             steps {
                 script {
+                    echo "Starting Unit Tests"
                     docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
                         sh """
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
-                        pip install pytest-xdist
-                        python3 -m pytest -n auto --junitxml results.xml polybot/*.py
+                        pip install pytest-xdist pytest-timeout
+                        # Run pytest with verbosity and timeout for each test
+                        python3 -m pytest -n 4 --timeout=60 --junitxml results.xml tests/*.py
                         deactivate
                         """
                     }
+                    echo "Unit Tests completed"
                 }
             }
             post {
@@ -64,10 +70,11 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Lint Test') {
             steps {
                 script {
                     try {
+                        echo "Starting Lint Tests"
                         docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
                             sh '''
                             python3 -m venv venv
@@ -79,8 +86,9 @@ pipeline {
                             deactivate
                             '''
                         }
+                        echo "Lint Tests completed"
                     } catch (Exception e) {
-                        error "Test failed: ${e.getMessage()}"
+                        error "Lint Tests failed: ${e.getMessage()}"
                     }
                 }
             }
@@ -103,29 +111,21 @@ pipeline {
     post {
         always {
             script {
-                try {
-                    def containerId = sh(script: "docker ps -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}", returnStdout: true).trim()
+                echo "Cleaning up Docker containers and images"
+                def containerId = sh(script: "docker ps -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}", returnStdout: true).trim()
 
-                    sh """
-                        for id in \$(docker ps -a -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}); do
-                            if [ "\$id" != "${containerId}" ]; then
-                                docker rm -f \$id || true
-                            fi
-                        done
-                    """
-                } catch (Exception e) {
-                    error "Error cleaning up containers: ${e.getMessage()}"
-                }
-
-                try {
-                    sh """
-                        docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
-                    """
-                } catch (Exception e) {
-                    error "Error cleaning up images: ${e.getMessage()}"
-                }
-
+                sh """
+                    for id in \$(docker ps -a -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}); do
+                        if [ "\$id" != "${containerId}" ]; then
+                            docker rm -f \$id || true
+                        fi
+                    done
+                """
+                sh """
+                    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true
+                """
                 cleanWs()
+                echo "Cleanup completed"
             }
         }
 
