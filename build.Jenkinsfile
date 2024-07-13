@@ -54,7 +54,7 @@ pipeline {
                         pip install -r requirements.txt
                         pip install pytest-xdist pytest-timeout
                         # Run pytest with verbosity and timeout for each test
-                        python3 -m pytest -n 4 --timeout=300 --junitxml results.xml polybot/*.py
+                        python3 -m pytest -n 4 --timeout=60 --junitxml results.xml polybot/*.py
                         deactivate
                         """
                     }
