@@ -8,7 +8,7 @@ pipeline {
     environment {
         DOCKER_REPO = "beny14/polybot"
         NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
-        NEXUS_REPO_URL = "http://192.168.1.75:8081/repository/docker-repo/" // Replace with your Nexus repository URL
+        NEXUS_REPO_URL = "http://192.168.1.75:8081/repository/docker-repo/" // Replace  with your Nexus repository URL
     }
 
     stages {
