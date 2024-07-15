@@ -9,10 +9,8 @@ pipeline {
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
-        SNYK_TOKEN = credentials('SNYK_TOKEN')
-        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
         NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
-        NEXUS_REPO_URL = "http://192.168.1.75:5000/repository/docker-repo/" // Replace with your Nexus repository  URL
+        NEXUS_REPO_URL = "http://192.168.1.75:5000/repository/docker-repo/" // Replace with your Nexus repository URL
     }
 
     agent {
@@ -50,7 +48,7 @@ pipeline {
                         try {
                             echo "Starting Docker build"
                             sh """
-                                echo ${NEXUS_PASS} | docker login -u ${NEXUS_USER} --password-stdin ${NEXUS_REPO_URL}
+                                echo \${NEXUS_PASS} | docker login -u \${NEXUS_USER} --password-stdin ${NEXUS_REPO_URL}
                                 docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
@@ -62,7 +60,7 @@ pipeline {
                             """
                             echo "Docker build and push completed"
                         } catch (Exception e) {
-                            error "Build failed: ${e.getMessage()}"
+                            error "Build failed: \${e.getMessage()}"
                         }
                     }
                 }
@@ -80,7 +78,6 @@ pipeline {
                         pip install --upgrade pip
                         pip install -r requirements.txt
                         pip install pytest-xdist pytest-timeout
-                        # Run pytest with verbosity and timeout for each test
                         python3 -m pytest -n 4 --timeout=60 --junitxml results.xml tests/*.py
                         deactivate
                         """
@@ -95,7 +92,7 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Lint Tests') {
             steps {
                 script {
                     try {
@@ -113,7 +110,7 @@ pipeline {
                         }
                         echo "Lint Tests completed"
                     } catch (Exception e) {
-                        error "Test failed: ${e.getMessage()}"
+                        error "Lint tests failed: \${e.getMessage()}"
                     }
                 }
             }
@@ -125,7 +122,7 @@ pipeline {
                             echo "Pylint log content:"
                             sh 'cat pylint.log'
                         } catch (Exception e) {
-                            echo "Archiving or recording issues failed: ${e.getMessage()}"
+                            echo "Archiving or recording issues failed: \${e.getMessage()}"
                         }
                     }
                 }
@@ -156,9 +153,13 @@ pipeline {
 
         failure {
             script {
-                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
+                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description
+
+: 'Build failed'
                 echo "Error occurred: ${errorMessage}"
             }
         }
     }
 }
+
+
