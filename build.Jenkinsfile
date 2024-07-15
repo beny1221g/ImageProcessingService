@@ -46,7 +46,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: "nexus_credentials_id", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: "nexus_user", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         try {
                             echo "Starting Docker build"
                             sh """
