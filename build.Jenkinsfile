@@ -3,7 +3,7 @@ pipeline {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
         disableConcurrentBuilds()
         timestamps()
-        timeout(time: 45, unit: 'MINUTES') // Set a global timeout for the pipeline
+        timeout(time: 45, unit: 'MINUTES') // Set  a global timeout for the pipeline
     }
 
     environment {
