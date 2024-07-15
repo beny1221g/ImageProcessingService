@@ -11,6 +11,8 @@ pipeline {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
         TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
+        NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
+        NEXUS_REPO_URL = "http://192.168.1.75:8081/repository/docker-repo/" // Replace with your Nexus repository URL
     }
 
     agent {
@@ -21,17 +23,42 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+        stage('Check and Start Nexus') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
-                    script {
+                script {
+                    def nexusStatus = sh(script: 'docker ps -q -f name=nexus', returnStdout: true).trim()
+                    if (nexusStatus == "") {
+                        echo "Nexus container is not running, checking if it exists..."
+                        def nexusExists = sh(script: 'docker ps -a -q -f name=nexus', returnStdout: true).trim()
+                        if (nexusExists != "") {
+                            echo "Stopping and removing existing Nexus container"
+                            sh 'docker stop nexus && docker rm nexus'
+                        }
+                        echo "Starting Nexus container"
+                        sh 'docker run -d -p 8081:8081 --name nexus -v /path/to/nexus-data:/nexus-data sonatype/nexus3'
+                    } else {
+                        echo "Nexus container is already running"
+                    }
+                }
+            }
+        }
+
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: "nexus_credentials_id", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         try {
                             echo "Starting Docker build"
                             sh """
-                                echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
+                                echo ${NEXUS_PASS} | docker login -u ${NEXUS_USER} --password-stdin ${NEXUS_REPO_URL}
                                 docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
+                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
+                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:latest
                                 docker push ${DOCKER_REPO}:${BUILD_NUMBER}
+                                docker push ${DOCKER_REPO}:latest
+                                docker push ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
+                                docker push ${NEXUS_REPO_URL}${DOCKER_REPO}:latest
                             """
                             echo "Docker build and push completed"
                         } catch (Exception e) {
