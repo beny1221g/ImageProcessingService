@@ -3,14 +3,14 @@ pipeline {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
         disableConcurrentBuilds()
         timestamps()
-        timeout(time: 120, unit: 'MINUTES') // Set a global timeout for the pipeline
+        timeout(time: 45, unit: 'MINUTES') // Set a global timeout for the pipeline
     }
 
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
         NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
-        NEXUS_REPO_URL = "http://192.168.1.75:5000/repository/docker-repo/" // Replace with your Nexus repository URL
+        NEXUS_REPO_URL = "http://192.168.1.75:8081/repository/docker-repo/" // Replace with your Nexus repository URL
     }
 
     agent {
