@@ -11,7 +11,7 @@ pipeline {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
         TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
-        NEXUS_URL = "http://192.168.1.75:8001"
+        NEXUS_URL = "http://192.168.1.75:8002"
         NEXUS_REPO_URL = "http://192.168.1.75:8002/repository/docker-repo/"
     }
 
