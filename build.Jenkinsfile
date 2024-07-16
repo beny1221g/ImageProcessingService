@@ -1,6 +1,3 @@
-//         NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
-//         NEXUS_REPO_URL = "http://192.168.1.75:8002/repository/docker-repo/" // Replace with your Nexus repository URL
-
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
@@ -14,6 +11,8 @@ pipeline {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
         TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
+        NEXUS_URL = "http://192.168.1.75:8001"
+        NEXUS_REPO_URL = "http://192.168.1.75:8002/repository/docker-repo/"
     }
 
     agent {
@@ -35,6 +34,7 @@ pipeline {
                                 docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
                                 docker push ${DOCKER_REPO}:${BUILD_NUMBER}
+                                docker push ${DOCKER_REPO}:latest
                             """
                             echo "Docker build and push completed"
                         } catch (Exception e) {
@@ -107,17 +107,25 @@ pipeline {
                 }
             }
         }
+
         stage('Push to Nexus') {
-        steps {
-            withCredentials([usernamePassword(credentialsId: 'nexus_user', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                script {
-                    sh "docker login -u ${NEXUS_USERNAME} -p ${NEXUS_PASSWORD} http://localhost:8001/repository/polybot/"
-                    sh "docker tag ${IMG_NAME} localhost:8002/repository/docker-repo/${IMG_NAME}"
-                    sh "docker push localhost:8002/repository/docker-repo/${IMG_NAME}"
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus_user', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    script {
+                        try {
+                            echo "Pushing Docker image to Nexus"
+                            sh """
+                                echo ${NEXUS_PASSWORD} | docker login -u ${NEXUS_USERNAME} --password-stdin ${NEXUS_URL}
+                                docker tag ${IMG_NAME} ${NEXUS_REPO_URL}${IMG_NAME}
+                                docker push ${NEXUS_REPO_URL}${IMG_NAME}
+                            """
+                            echo "Docker image pushed to Nexus"
+                        } catch (Exception e) {
+                            error "Push to Nexus failed: ${e.getMessage()}"
+                        }
                     }
                 }
             }
-        }
         }
     }
 
