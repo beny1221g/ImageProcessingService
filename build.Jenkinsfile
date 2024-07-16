@@ -1,16 +1,19 @@
+//         NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
+//         NEXUS_REPO_URL = "http://192.168.1.75:8002/repository/docker-repo/" // Replace with your Nexus repository URL
+
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
         disableConcurrentBuilds()
         timestamps()
-        timeout(time: 45, unit: 'MINUTES') // Set  a global timeout for the pipeline
+        timeout(time: 40, unit: 'MINUTES') // Set a global timeout for the pipeline
     }
 
     environment {
         IMG_NAME = "polybot:${BUILD_NUMBER}"
         DOCKER_REPO = "beny14/polybot"
-        NEXUS_CREDENTIAL = credentials('nexus_user') // Replace with your Nexus credentials ID
-        NEXUS_REPO_URL = "http://192.168.1.75:8002/repository/docker-repo/" // Replace with your Nexus repository URL
+        SNYK_TOKEN = credentials('SNYK_TOKEN')
+        TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
     }
 
     agent {
@@ -21,46 +24,21 @@ pipeline {
     }
 
     stages {
-        stage('Check and Start Nexus') {
+        stage('Build') {
             steps {
-                script {
-                    def nexusStatus = sh(script: 'docker ps -q -f name=nexus', returnStdout: true).trim()
-                    if (nexusStatus == "") {
-                        echo "Nexus container is not running, checking if it exists..."
-                        def nexusExists = sh(script: 'docker ps -a -q -f name=nexus', returnStdout: true).trim()
-                        if (nexusExists != "") {
-                            echo "Stopping and removing existing Nexus container"
-                            sh 'docker stop nexus && docker rm nexus'
-                        }
-                        echo "Starting Nexus container"
-                        sh 'docker run -d -p 8081:8081 --name nexus -v /path/to/nexus-data:/nexus-data sonatype/nexus3'
-                    } else {
-                        echo "Nexus container is already running"
-                    }
-                }
-            }
-        }
-
-        stage('Build and Push Docker Image') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "nexus_user", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_key', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
+                    script {
                         try {
                             echo "Starting Docker build"
                             sh """
-                                echo \${NEXUS_PASS} | docker login -u \${NEXUS_USER} --password-stdin ${NEXUS_REPO_URL}
+                                echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin
                                 docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} .
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
-                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
-                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${NEXUS_REPO_URL}${DOCKER_REPO}:latest
                                 docker push ${DOCKER_REPO}:${BUILD_NUMBER}
-                                docker push ${DOCKER_REPO}:latest
-                                docker push ${NEXUS_REPO_URL}${DOCKER_REPO}:${BUILD_NUMBER}
-                                docker push ${NEXUS_REPO_URL}${DOCKER_REPO}:latest
                             """
                             echo "Docker build and push completed"
                         } catch (Exception e) {
-                            error "Build failed: \${e.getMessage()}"
+                            error "Build failed: ${e.getMessage()}"
                         }
                     }
                 }
@@ -78,6 +56,7 @@ pipeline {
                         pip install --upgrade pip
                         pip install -r requirements.txt
                         pip install pytest-xdist pytest-timeout
+                        # Run pytest with verbosity and timeout for each test
                         python3 -m pytest -n 4 --timeout=60 --junitxml results.xml tests/*.py
                         deactivate
                         """
@@ -92,7 +71,7 @@ pipeline {
             }
         }
 
-        stage('Lint Tests') {
+        stage('Test') {
             steps {
                 script {
                     try {
@@ -110,7 +89,7 @@ pipeline {
                         }
                         echo "Lint Tests completed"
                     } catch (Exception e) {
-                        error "Lint tests failed: \${e.getMessage()}"
+                        error "Test failed: ${e.getMessage()}"
                     }
                 }
             }
@@ -122,11 +101,23 @@ pipeline {
                             echo "Pylint log content:"
                             sh 'cat pylint.log'
                         } catch (Exception e) {
-                            echo "Archiving or recording issues failed: \${e.getMessage()}"
+                            echo "Archiving or recording issues failed: ${e.getMessage()}"
                         }
                     }
                 }
             }
+        }
+        stage('Push to Nexus') {
+        steps {
+            withCredentials([usernamePassword(credentialsId: 'nexus_user', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                script {
+                    sh "docker login -u ${NEXUS_USERNAME} -p ${NEXUS_PASSWORD} http://localhost:8001/repository/polybot/"
+                    sh "docker tag ${IMG_NAME} localhost:8002/repository/docker-repo/${IMG_NAME}"
+                    sh "docker push localhost:8002/repository/docker-repo/${IMG_NAME}"
+                    }
+                }
+            }
+        }
         }
     }
 
@@ -153,13 +144,9 @@ pipeline {
 
         failure {
             script {
-                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description
-
-: 'Build failed'
+                def errorMessage = currentBuild.result == 'FAILURE' ? currentBuild.description : 'Build failed'
                 echo "Error occurred: ${errorMessage}"
             }
         }
     }
 }
-
-
