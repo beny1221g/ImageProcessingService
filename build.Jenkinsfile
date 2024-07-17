@@ -11,8 +11,6 @@ pipeline {
         DOCKER_REPO = "beny14/polybot"
         SNYK_TOKEN = credentials('SNYK_TOKEN')
         TELEGRAM_TOKEN = credentials('TELEGRAM_TOKEN')
-        NEXUS_URL = "http://192.168.1.75:8002"
-        NEXUS_REPO_URL = "http://192.168.1.75:8002/repository/docker-repo/"
     }
 
     agent {
@@ -108,25 +106,7 @@ pipeline {
             }
         }
 
-        stage('Push to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus_user', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    script {
-                        try {
-                            echo "Pushing Docker image to Nexus"
-                            sh """
-                                echo ${NEXUS_PASSWORD} | docker login -u ${NEXUS_USERNAME} --password-stdin ${NEXUS_URL}
-                                docker tag ${IMG_NAME} ${NEXUS_REPO_URL}${IMG_NAME}
-                                docker push ${NEXUS_REPO_URL}${IMG_NAME}
-                            """
-                            echo "Docker image pushed to Nexus"
-                        } catch (Exception e) {
-                            error "Push to Nexus failed: ${e.getMessage()}"
-                        }
-                    }
-                }
-            }
-        }
+
     }
 
     post {
