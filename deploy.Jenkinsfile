@@ -13,8 +13,8 @@ pipeline {
                     def dockerImage = "${params.IMAGE_NAME}:${params.BUILD_NUMBER}"
                     echo "Starting build and push of Docker image ${dockerImage}"
                     sh """
-                        docker build -t ${dockerImage} .
                         docker login localhost:8083
+                        docker tag dockerImage localhost:8083/dockerImage
                         docker push localhost:8083/${dockerImage}
                     """
                     echo "Docker push to Nexus completed"
