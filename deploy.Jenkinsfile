@@ -16,6 +16,7 @@ pipeline {
                             echo "Starting Docker push to Nexus with tag ${params.IMAGE_TAG}"
                             sh """
                                 echo $NEXUS_PASS | docker login localhost:8083 -u $NEXUS_USER --password-stdin
+                                docker tag ${dockerImage}:${params.IMAGE_TAG} localhost:8083/${taggedImage}
                                 docker push localhost:8083/${taggedImage}
                             """
                             echo "Docker push to Nexus completed"
