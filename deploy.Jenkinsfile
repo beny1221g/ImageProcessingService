@@ -14,7 +14,7 @@ pipeline {
                     echo "Starting build and push of Docker image ${dockerImage}"
                     sh """
                         docker login localhost:8083
-                        docker tag dockerImage localhost:8083/dockerImage
+                        docker tag ${dockerImage} localhost:8083/${dockerImage}
                         docker push localhost:8083/${dockerImage}
                     """
                     echo "Docker push to Nexus completed"
