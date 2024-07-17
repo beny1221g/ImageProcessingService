@@ -2,28 +2,22 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Tag to be applied to the Docker image')
+        string(name: 'IMAGE_NAME', defaultValue: 'beny14/polybot', description: 'Name of the Docker image')
+        string(name: 'BUILD_NUMBER', defaultValue: '', description: 'Build number of the Docker image to deploy')
     }
 
     stages {
-        stage('Push Docker Image to Nexus') {
+        stage('Build and Push Docker Image to Nexus') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: "nexus_user", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                        try {
-                            def dockerImage = "beny14/polybot"
-                            def taggedImage = "${dockerImage}:${params.IMAGE_TAG}"
-                            echo "Starting Docker push to Nexus with tag ${params.IMAGE_TAG}"
-                            sh """
-                                echo $NEXUS_PASS | docker login localhost:8083 -u $NEXUS_USER --password-stdin
-                                docker tag ${dockerImage}:${params.IMAGE_TAG} localhost:8083/${taggedImage}
-                                docker push localhost:8083/${taggedImage}
-                            """
-                            echo "Docker push to Nexus completed"
-                        } catch (Exception e) {
-                            error "Build and push to Nexus failed: ${e.getMessage()}"
-                        }
-                    }
+                    def dockerImage = "${params.IMAGE_NAME}:${params.BUILD_NUMBER}"
+                    echo "Starting build and push of Docker image ${dockerImage}"
+                    sh """
+                        docker build -t ${dockerImage} .
+                        echo $NEXUS_PASS | docker login localhost:8083 -u $NEXUS_USER --password-stdin
+                        docker push localhost:8083/${dockerImage}
+                    """
+                    echo "Docker push to Nexus completed"
                 }
             }
         }
