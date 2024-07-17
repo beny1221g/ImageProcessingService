@@ -9,7 +9,7 @@ pipeline {
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: "nexus_credentials_id", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: "nexus_user", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         try {
                             echo "Starting Docker push to Nexus"
                             sh """
