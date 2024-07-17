@@ -14,7 +14,7 @@ pipeline {
                     echo "Starting build and push of Docker image ${dockerImage}"
                     sh """
                         docker build -t ${dockerImage} .
-                        echo $NEXUS_PASS | docker login localhost:8083 -u $NEXUS_USER --password-stdin
+                        docker login localhost:8083
                         docker push localhost:8083/${dockerImage}
                     """
                     echo "Docker push to Nexus completed"
