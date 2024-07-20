@@ -35,7 +35,7 @@ pipeline {
 
                     // Check and switch to the main branch if necessary
                     sh """
-                        cd /deploy_polybot
+                        cd /polybot
                         git fetch
                         current_branch=\$(git branch --show-current)
                         if [ "\$current_branch" != "main" ]; then
