@@ -17,7 +17,7 @@ pipeline {
                         docker tag ${dockerImage} localhost:8083/${dockerImage}
                         docker push localhost:8083/${dockerImage}
                     """
-                    echo "Docker push to Nexus completed"
+                    echo "Docker push to Nexus completed "
                 }
             }
         }
