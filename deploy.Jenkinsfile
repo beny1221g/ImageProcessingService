@@ -30,7 +30,7 @@ pipeline {
 
                     // Ensure proper permissions
                     sh """
-                        chown -R jenkins:jenkins /project_poly
+                        sudo chmod -R 775 /project_poly
                     """
 
                     // Pull the latest changes from the Git repository
