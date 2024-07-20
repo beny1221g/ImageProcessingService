@@ -10,33 +10,31 @@ pipeline {
         stage('Build and Push Docker Image to Nexus') {
             steps {
                 script {
-                    def dockerImage = "${params.IMAGE_NAME}:${params.BUILD_NUMBER}"
+                    def buildNumber = params.BUILD_NUMBER ? params.BUILD_NUMBER : 'latest'
+                    def dockerImage = "${params.IMAGE_NAME}:${buildNumber}"
                     echo "Starting build and push of Docker image ${dockerImage}"
                     sh """
                         docker login localhost:8083
                         docker tag ${dockerImage} localhost:8083/${dockerImage}
                         docker push localhost:8083/${dockerImage}
                     """
-                    echo "Docker push to Nexus completed "
+                    echo "Docker push to Nexus completed successfully"
                 }
             }
         }
 
-    }
-    stages {
-        stage('run docker-compose , polybot and nginx') {
+        stage('Run Docker Compose') {
             steps {
                 script {
+                    echo "Running Docker Compose for polybot and nginx"
                     sh """
-                      cd /
-                      cd /project_poly
-                      git pull https://github.com/beny1221g/ImageProcessingService.git
-                      docker-compose up
+                        cd /project_poly
+                        git pull https://github.com/beny1221g/ImageProcessingService.git
+                        docker-compose up -d
                     """
-                    echo "containers run successfully"
+                    echo "Containers started successfully"
                 }
             }
         }
-
     }
 }

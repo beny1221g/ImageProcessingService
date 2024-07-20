@@ -37,6 +37,7 @@ pipeline {
                                 docker push ${DOCKER_REPO}:latest
 
                             """
+                            //here my shared lib usage
                             foo()
                             echo "Docker build and push completed"
                         } catch (Exception e) {
@@ -82,7 +83,6 @@ pipeline {
                             sh '''
                             python3 -m venv venv
                             . venv/bin/activate
-                            pip install -r requirements.txt
                             pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true
                             ls -alh
                             cat pylint.log
