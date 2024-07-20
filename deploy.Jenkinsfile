@@ -29,6 +29,7 @@ pipeline {
                     echo "Running Docker Compose for polybot and nginx"
                     sh """
                         cd /project_poly
+                        git config --global --add safe.directory /project_poly
                         git pull https://github.com/beny1221g/ImageProcessingService.git
                         docker-compose up -d
                     """
