@@ -35,9 +35,7 @@ pipeline {
 
                     // Check and switch to the main branch if necessary
                     sh """
-                        ls
-                        ls /polybot
-                        ls /nginx
+
                         current_branch=\$(git branch --show-current)
                         if [ "\$current_branch" != "main" ]; then
                             if git show-ref --quiet refs/heads/main; then
