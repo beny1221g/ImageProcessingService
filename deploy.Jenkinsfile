@@ -35,7 +35,7 @@ pipeline {
 
                     // Check and switch to the main branch if necessary
                     sh """
-
+                        cd /project_poly
                         current_branch=\$(git branch --show-current)
                         if [ "\$current_branch" != "main" ]; then
                             if git show-ref --quiet refs/heads/main; then
@@ -46,6 +46,8 @@ pipeline {
                                     echo "Renaming 'master' branch to 'main' and switching to it."
                                     git branch -m master main
                                     git checkout main
+                                    git push origin main
+                                    git push origin --delete master
                                 else
                                     echo "'main' branch does not exist and 'master' branch is not found to rename."
                                     exit 1
