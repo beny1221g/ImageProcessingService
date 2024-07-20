@@ -37,7 +37,7 @@ pipeline {
                                 docker push ${DOCKER_REPO}:latest
 
                             """
-                            hello()
+                            foo()
                             echo "Docker build and push completed"
                         } catch (Exception e) {
                             error "Build failed: ${e.getMessage()}"
