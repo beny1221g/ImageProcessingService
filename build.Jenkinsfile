@@ -70,6 +70,8 @@ pipeline {
             post {
                 always {
                     junit allowEmptyResults: true, testResults: 'results.xml'
+                    echo "Unit Test log content:"
+                    sh 'cat results.xml'
                 }
             }
         }
