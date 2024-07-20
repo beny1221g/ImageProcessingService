@@ -30,11 +30,11 @@ pipeline {
                         try {
                             echo "Starting Docker build" // Log message indicating the start of the Docker build process
                             sh """
-                                echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin // Log in to Docker registry using credentials
-                                docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} . // Build Docker image with the tag of build number
-                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest // Tag the Docker image as 'latest'
-                                docker push ${DOCKER_REPO}:${BUILD_NUMBER} // Push the Docker image tagged with the build number to the repository
-                                docker push ${DOCKER_REPO}:latest // Push the Docker image tagged 'latest' to the repository
+                                echo ${USERPASS} | docker login -u ${USERNAME} --password-stdin # Log in to Docker registry using credentials
+                                docker build -t ${DOCKER_REPO}:${BUILD_NUMBER} . # Build Docker image with the tag of build number
+                                docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest # Tag the Docker image as 'latest'
+                                docker push ${DOCKER_REPO}:${BUILD_NUMBER} # Push the Docker image tagged with the build number to the repository
+                                docker push ${DOCKER_REPO}:latest # Push the Docker image tagged 'latest' to the repository
                             """
                             foo() // Call a function named 'foo' from the shared library
                             echo "Docker build and push completed" // Log message indicating the completion of the Docker build and push
@@ -52,13 +52,13 @@ pipeline {
                     echo "Starting Unit Tests" // Log message indicating the start of unit tests
                     docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
                         sh """
-                        python3 -m venv venv // Create a Python virtual environment
-                        . venv/bin/activate // Activate the virtual environment
-                        pip install --upgrade pip // Upgrade pip to the latest version
-                        pip install -r requirements.txt // Install project dependencies from requirements.txt
-                        pip install pytest-xdist pytest-timeout // Install pytest plugins for parallel test execution and timeout
-                        python3 -m pytest -n 4 --timeout=60 --junitxml results.xml tests/*.py // Run unit tests with concurrency and timeout, saving results to XML
-                        deactivate // Deactivate the virtual environment
+                        python3 -m venv venv # Create a Python virtual environment
+                        . venv/bin/activate # Activate the virtual environment
+                        pip install --upgrade pip # Upgrade pip to the latest version
+                        pip install -r requirements.txt # Install project dependencies from requirements.txt
+                        pip install pytest-xdist pytest-timeout # Install pytest plugins for parallel test execution and timeout
+                        python3 -m pytest -n 4 --timeout=60 --junitxml results.xml tests/*.py # Run unit tests with concurrency and timeout, saving results to XML
+                        deactivate # Deactivate the virtual environment
                         """
                     }
                     echo "Unit Tests completed" // Log message indicating the completion of unit tests
@@ -78,12 +78,12 @@ pipeline {
                         echo "Starting Lint Tests" // Log message indicating the start of lint tests
                         docker.image("${DOCKER_REPO}:${BUILD_NUMBER}").inside {
                             sh '''
-                            python3 -m venv venv // Create a Python virtual environment
-                            . venv/bin/activate // Activate the virtual environment
-                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true // Run lint checks and save output to pylint.log, allowing the command to succeed even with linting issues
-                            ls -alh // List files to verify presence
-                            cat pylint.log // Display the content of the pylint log file
-                            deactivate // Deactivate the virtual environment
+                            python3 -m venv venv # Create a Python virtual environment
+                            . venv/bin/activate # Activate the virtual environment
+                            pylint --disable=E1136,C0301,C0114,E1101,C0116,C0103,W0718,E0401,W0613,R1722,W0612,R0912,C0304,C0115,R1705 polybot/*.py > pylint.log || true # Run lint checks and save output to pylint.log, allowing the command to succeed even with linting issues
+                            ls -alh # List files to verify presence
+                            cat pylint.log # Display the content of the pylint log file
+                            deactivate # Deactivate the virtual environment
                             '''
                         }
                         echo "Lint Tests completed" // Log message indicating the completion of lint tests
@@ -96,11 +96,11 @@ pipeline {
                 always {
                     script {
                         try {
-                            archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true // Archive the pylint log file, allowing empty archive if the file is missing
+                            archiveArtifacts artifacts: 'pylint.log', allowEmptyArchive: true # Archive the pylint log file, allowing empty archive if the file is missing
                             echo "Pylint log content:" // Log message before displaying pylint log content
-                            sh 'cat pylint.log' // Display the pylint log content
+                            sh 'cat pylint.log' # Display the pylint log content
                         } catch (Exception e) {
-                            echo "Archiving or recording issues failed: ${e.getMessage()}" // Log error if archiving or displaying the log fails
+                            echo "Archiving or recording issues failed: ${e.getMessage()}" # Log error if archiving or displaying the log fails
                         }
                     }
                 }
@@ -117,12 +117,12 @@ pipeline {
                 sh """
                     for id in \$(docker ps -a -q -f ancestor=${DOCKER_REPO}:${BUILD_NUMBER}); do
                         if [ "\$id" != "${containerId}" ]; then
-                            docker rm -f \$id || true // Remove old containers except the current build container
+                            docker rm -f \$id || true # Remove old containers except the current build container
                         fi
                     done
                 """
                 sh """
-                    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true // Remove old Docker images except 'latest' and the current build image
+                    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '${DOCKER_REPO}' | grep -v ':latest' | grep -v ':${BUILD_NUMBER}' | awk '{print \$2}' | xargs --no-run-if-empty docker rmi -f || true # Remove old Docker images except 'latest' and the current build image
                 """
                 cleanWs() // Clean the Jenkins workspace directory
                 echo "Cleanup completed" // Log message indicating the completion of cleanup
