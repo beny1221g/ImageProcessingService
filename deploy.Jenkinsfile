@@ -13,7 +13,7 @@ pipeline {
                     def dockerImage = "${params.IMAGE_NAME}:${params.BUILD_NUMBER}"
                     echo "Starting build and push of Docker image ${dockerImage}"
                     sh """
-                        docker login localhost:8083
+                        docker login localhost:8081
                         docker tag ${dockerImage} localhost:8083/${dockerImage}
                         docker push localhost:8083/${dockerImage}
                     """
