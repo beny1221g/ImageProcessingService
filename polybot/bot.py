@@ -2,7 +2,7 @@ import os
 import telebot
 import cv2
 from dotenv import load_dotenv
-from polybot.img_proc import Img
+from img_proc import Img
 
 # load environment variables
 load_dotenv()

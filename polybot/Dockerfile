@@ -1,9 +1,3 @@
-# Use an official Python runtime as a parent image
-FROM python:3.13.0b2-slim
-
-# Set the working directory in the container
-WORKDIR /app
-
 # Install system dependencies and build tools
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -26,14 +20,20 @@ RUN python -m pip install --upgrade pip \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+COPY .env .env
+
 # Copy the rest of the application code
 COPY . .
 
-# Set the working directory to the polybot directory
-WORKDIR /app/polybot
+
+# Ensure the directory structure is correct
+RUN ls -la /app
+
+# Set the working directory to /app
+WORKDIR /app
 
 # Expose port 5000
 EXPOSE 5000
 
 # Command to run the bot when the container launches
-CMD ["python3", "bot.py"]
+CMD ["python3", "-m", "polybot.bot"]

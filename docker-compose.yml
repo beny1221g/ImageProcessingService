@@ -7,7 +7,7 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
-    command: python -m polybot.bot
+    command: python3 -m bot.py
 
   web:
     build:
@@ -15,5 +15,3 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8002:8002"
-
-

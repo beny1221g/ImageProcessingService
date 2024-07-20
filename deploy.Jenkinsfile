@@ -23,4 +23,20 @@ pipeline {
         }
 
     }
+    stages {
+        stage('run docker-compose , polybot and nginx') {
+            steps {
+                script {
+                    sh """
+                      cd /
+                      cd /project_poly
+                      git pull https://github.com/beny1221g/ImageProcessingService.git
+                      docker-compose up
+                    """
+                    echo "containers run successfully"
+                }
+            }
+        }
+
+    }
 }
