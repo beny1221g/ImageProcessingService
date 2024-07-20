@@ -23,58 +23,6 @@ pipeline {
             }
         }
 
-        stage('Update Project and Restart Services') {
-            steps {
-                script {
-                    echo "Updating project and restarting Docker services"
 
-                    // Ensure proper permissions
-                    sh """
-                        sudo chmod -R 775 /project_poly
-                    """
-
-                    // Check and switch to the main branch if necessary
-                    sh """
-                        cd /project_poly
-                        current_branch=\$(git branch --show-current)
-                        if [ "\$current_branch" != "main" ]; then
-                            if git show-ref --quiet refs/heads/main; then
-                                echo "Switching to the 'main' branch."
-                                git checkout main
-                            else
-                                if git show-ref --quiet refs/heads/master; then
-                                    echo "Renaming 'master' branch to 'main' and switching to it."
-                                    git branch -m master main
-                                    git checkout main
-                                    git push origin main
-                                    git push origin --delete master
-                                else
-                                    echo "'main' branch does not exist and 'master' branch is not found to rename."
-                                    exit 1
-                                fi
-                            fi
-                        else
-                            echo "You are already on the 'main' branch."
-                        fi
-                    """
-
-                    // Pull the latest changes from the Git repository
-                    sh """
-                        git config --global --add safe.directory /project_poly
-                        git pull https://github.com/beny1221g/ImageProcessingService.git
-                    """
-
-                    // Debugging information
-                    sh """
-                        docker-compose config
-                        docker-compose down
-                        docker-compose build
-                        docker-compose up -d
-                    """
-
-                    echo "Project updated and containers restarted successfully"
-                }
-            }
-        }
     }
 }
