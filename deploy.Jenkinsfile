@@ -35,7 +35,9 @@ pipeline {
 
                     // Pull the latest changes from the Git repository
                     sh """
+
                         cd /project_poly
+                        git branch -m master main
                         git config --global --add safe.directory /project_poly
                         git pull https://github.com/beny1221g/ImageProcessingService.git
                     """
