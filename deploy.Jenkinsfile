@@ -33,11 +33,32 @@ pipeline {
                         sudo chmod -R 775 /project_poly
                     """
 
+                    // Check and switch to the main branch if necessary
+                    sh """
+                        cd /project_poly
+                        git fetch
+                        current_branch=\$(git branch --show-current)
+                        if [ "\$current_branch" != "main" ]; then
+                            if git show-ref --quiet refs/heads/main; then
+                                echo "Switching to the 'main' branch."
+                                git checkout main
+                            else
+                                if git show-ref --quiet refs/heads/master; then
+                                    echo "Renaming 'master' branch to 'main' and switching to it."
+                                    git branch -m master main
+                                    git checkout main
+                                else
+                                    echo "'main' branch does not exist and 'master' branch is not found to rename."
+                                    exit 1
+                                fi
+                            fi
+                        else
+                            echo "You are already on the 'main' branch."
+                        fi
+                    """
+
                     // Pull the latest changes from the Git repository
                     sh """
-
-                        cd /project_poly
-                        git branch -m master main
                         git config --global --add safe.directory /project_poly
                         git pull https://github.com/beny1221g/ImageProcessingService.git
                     """
