@@ -7,21 +7,28 @@ pipeline {
     }
 
     stages {
-        stage('Build and Push Docker Image to Nexus') {
-            steps {
-                script {
-                    def buildNumber = params.BUILD_NUMBER ? params.BUILD_NUMBER : 'latest'
-                    def dockerImage = "${params.IMAGE_NAME}:${buildNumber}"
-                    echo "Starting build and push of Docker image ${dockerImage}"
-                    sh """
-                        docker login localhost:8083
-                        docker tag ${dockerImage} localhost:8083/${dockerImage}
-                        docker push localhost:8083/${dockerImage}
-                    """
-                    echo "Docker push to Nexus completed successfully"
-                }
-            }
-        }
+//         stage('Build and Push Docker Image to Nexus') {
+//             steps {
+//                 script {
+//                     def buildNumber = params.BUILD_NUMBER ? params.BUILD_NUMBER : 'latest'
+//                     def dockerImage = "${params.IMAGE_NAME}:${buildNumber}"
+//                     echo "Starting build and push of Docker image ${dockerImage}"
+//
+//                     // Debugging: List contents of the temporary directory
+//                     sh """
+//                         echo "Listing contents of the workspace before build:"
+//                         ls -la /var/lib/jenkins/workspace/deploy_polybot
+//                     """
+//
+//                     sh """
+//                         docker login localhost:8083
+//                         docker tag ${dockerImage} localhost:8083/${dockerImage}
+//                         docker push localhost:8083/${dockerImage}
+//                     """
+//                     echo "Docker push to Nexus completed successfully"
+//                 }
+//             }
+//         }
 
         stage('Update Project and Restart Services') {
             steps {
@@ -33,32 +40,18 @@ pipeline {
                         sudo chmod -R 775 /project_poly
                     """
 
-                    // Check and switch to the main branch if necessary
+                    // Debugging: List contents of the project directory
                     sh """
-                        cd /polybot
-                        git fetch
-                        current_branch=\$(git branch --show-current)
-                        if [ "\$current_branch" != "main" ]; then
-                            if git show-ref --quiet refs/heads/main; then
-                                echo "Switching to the 'main' branch."
-                                git checkout main
-                            else
-                                if git show-ref --quiet refs/heads/master; then
-                                    echo "Renaming 'master' branch to 'main' and switching to it."
-                                    git branch -m master main
-                                    git checkout main
-                                else
-                                    echo "'main' branch does not exist and 'master' branch is not found to rename."
-                                    exit 1
-                                fi
-                            fi
-                        else
-                            echo "You are already on the 'main' branch."
-                        fi
+                        ls
+
+                        echo "Listing contents of the project directory before git pull:"
+                        ls -la /project_poly
                     """
 
                     // Pull the latest changes from the Git repository
                     sh """
+                        cd /project_poly
+                        git branch -m master main
                         git config --global --add safe.directory /project_poly
                         git pull https://github.com/beny1221g/ImageProcessingService.git
                     """
