@@ -35,6 +35,8 @@ pipeline {
 
                     // Check and switch to the main branch if necessary
                     sh """
+                        pwd
+                        cd /
                         cd /project_poly
                         git fetch
                         current_branch=\$(git branch --show-current)
