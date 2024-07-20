@@ -1,3 +1,5 @@
+@Library('shared-lib') _
+
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '14'))
@@ -33,7 +35,9 @@ pipeline {
                                 docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
                                 docker push ${DOCKER_REPO}:${BUILD_NUMBER}
                                 docker push ${DOCKER_REPO}:latest
+
                             """
+                            hello()
                             echo "Docker build and push completed"
                         } catch (Exception e) {
                             error "Build failed: ${e.getMessage()}"
@@ -69,7 +73,7 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Lint Test') {
             steps {
                 script {
                     try {
@@ -105,8 +109,6 @@ pipeline {
                 }
             }
         }
-
-
     }
 
     post {
