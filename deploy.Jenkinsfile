@@ -64,13 +64,11 @@ pipeline {
                         git pull https://github.com/beny1221g/ImageProcessingService.git
                     """
 
-                    // Stop and remove existing containers
+                    // Debugging information
                     sh """
+                        docker-compose config
                         docker-compose down
-                    """
-
-                    // Start updated containers
-                    sh """
+                        docker-compose build
                         docker-compose up -d
                     """
 
