@@ -23,17 +23,34 @@ pipeline {
             }
         }
 
-        stage('Run Docker Compose') {
+        stage('Update Project and Restart Services') {
             steps {
                 script {
-                    echo "Running Docker Compose for polybot and nginx"
+                    echo "Updating project and restarting Docker services"
+
+                    // Ensure proper permissions
+                    sh """
+                        chown -R jenkins:jenkins /project_poly
+                    """
+
+                    // Pull the latest changes from the Git repository
                     sh """
                         cd /project_poly
                         git config --global --add safe.directory /project_poly
                         git pull https://github.com/beny1221g/ImageProcessingService.git
+                    """
+
+                    // Stop and remove existing containers
+                    sh """
+                        docker-compose down
+                    """
+
+                    // Start updated containers
+                    sh """
                         docker-compose up -d
                     """
-                    echo "Containers started successfully"
+
+                    echo "Project updated and containers restarted successfully"
                 }
             }
         }
